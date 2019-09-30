@@ -1,29 +1,22 @@
+window.onload = localStorage.clear();
 const $app = document.getElementById("app");
 const $observe = document.getElementById("observe");
 const API = "https://rickandmortyapi.com/api/character/";
 // const API = "https://us-central1-escuelajs-api.cloudfunctions.net/characters";
 
-const CheckInfoURL = characters => {
-  const infoURL = localStorage.getItem("next_fetch");
-  if (infoURL == "") return characters;
-  else return infoURL;
-};
-
 const getData = api => {
-  localStorage.clear();
   fetch(api)
     .then(response => response.json())
     .then(response => {
+      localStorage.setItem("next_Fetch", response.info.next);
       const characters = response.results;
-      localStorage.setItem("nextFetch", response.info.next);
-      CheckInfoURL();
       let output = characters
         .map(character => {
           return `
-      <article class="Card">
-        <img src="${character.image}" />
-        <h2>${character.name}<span>${character.species}</span></h2>
-      </article>
+          <article class="Card">
+            <img src="${character.image}" />
+            <h2>${character.name}<span>${character.species}</span></h2>
+          </article>
     `;
         })
         .join("");
@@ -35,16 +28,29 @@ const getData = api => {
     .catch(error => console.log(error));
 };
 
-const loadData = () => {
-  return new Promise(res => {
-    res(getData(API));
-  });
+const loadData = async () => {
+  try {
+    const checkInfoURL = localStorage.getItem("next_Fetch");
+    console.log(checkInfoURL);
+    if (checkInfoURL === null) {
+      return getData(API);
+    } else if (checkInfoURL == "") {
+      intersectionObserver.unobserve($observe);
+      alert(
+        "Lo sentimos, pero por el momento no hay más personajes para mostrar."
+      );
+    } else {
+      return getData(checkInfoURL);
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const intersectionObserver = new IntersectionObserver(
-  async entries => {
+  entries => {
     if (entries[0].isIntersecting) {
-      await loadData();
+      loadData();
     }
   },
   {
